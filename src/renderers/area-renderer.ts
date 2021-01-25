@@ -1,12 +1,15 @@
 import { Coordinate } from '../model/coordinate';
+import { CustomPriceLineOptions } from '../model/series-options';
 import { SeriesItemsIndexesRange } from '../model/time-data';
 
-import { LineStyle, LineType, LineWidth, setLineStyle } from './draw-line';
+import { LineStyle, LineType, LineWidth } from './draw-line';
 import { LineItem } from './line-renderer';
 import { ScaledRenderer } from './scaled-renderer';
 import { walkLine } from './walk-line';
 
 export interface PaneRendererAreaData {
+	yClose?: CustomPriceLineOptions;
+	closeYCord: number | null;
 	items: LineItem[];
 	lineType: LineType;
 	lineColor: string;
@@ -35,13 +38,7 @@ export class PaneRendererArea extends ScaledRenderer {
 		}
 
 		ctx.lineCap = 'butt';
-		ctx.strokeStyle = this._data.lineColor;
-		ctx.lineWidth = this._data.lineWidth;
-		setLineStyle(ctx, this._data.lineStyle);
-
 		// walk lines with width=1 to have more accurate gradient's filling
-		ctx.lineWidth = 1;
-
 		ctx.beginPath();
 
 		if (this._data.items.length === 1) {
@@ -54,21 +51,24 @@ export class PaneRendererArea extends ScaledRenderer {
 		} else {
 			ctx.moveTo(this._data.items[this._data.visibleRange.from].x, this._data.bottom);
 			ctx.lineTo(this._data.items[this._data.visibleRange.from].x, this._data.items[this._data.visibleRange.from].y);
-
-			walkLine(ctx, this._data.items, this._data.lineType, this._data.visibleRange);
+			walkLine(
+				ctx,
+				this._data.items,
+				{
+					lineType: this._data.lineType,
+					lineWidth: this._data.lineWidth,
+					lineStyle: this._data.lineStyle,
+					strokeStyle: this._data.lineColor,
+				},
+				this._data.visibleRange,
+				this._data.closeYCord,
+				this._data.yClose
+			);
 
 			if (this._data.visibleRange.to > this._data.visibleRange.from) {
 				ctx.lineTo(this._data.items[this._data.visibleRange.to - 1].x, this._data.bottom);
 				ctx.lineTo(this._data.items[this._data.visibleRange.from].x, this._data.bottom);
 			}
 		}
-		ctx.closePath();
-
-		const gradient = ctx.createLinearGradient(0, 0, 0, this._data.bottom);
-		gradient.addColorStop(0, this._data.topColor);
-		gradient.addColorStop(1, this._data.bottomColor);
-
-		ctx.fillStyle = gradient;
-		ctx.fill();
 	}
 }
