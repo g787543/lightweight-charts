@@ -7,6 +7,7 @@ import { clone, DeepPartial, isBoolean, merge } from '../helpers/strict-type-che
 
 import { BarPrice, BarPrices } from '../model/bar';
 import { ChartOptions, ChartOptionsInternal } from '../model/chart-model';
+import { PriceLineOptions } from '../model/price-line-options';
 import { Series } from '../model/series';
 import {
 	AreaSeriesOptions,
@@ -203,7 +204,11 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		const res = new SeriesApi<'Area'>(series, this, this);
 		this._seriesMap.set(res, series);
 		this._seriesMapReversed.set(series, res);
-
+		if (options.yClose?.price) {
+			const data = merge(clone(options.yClose)) as PriceLineOptions;
+			series.createPriceLine(data);
+			series.setCloseYCord(data);
+		}
 		return res;
 	}
 
@@ -260,7 +265,11 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		const res = new SeriesApi<'Line'>(series, this, this);
 		this._seriesMap.set(res, series);
 		this._seriesMapReversed.set(series, res);
-
+		if (options.yClose?.price) {
+			const data = merge(clone(options.yClose)) as PriceLineOptions;
+			series.createPriceLine(data);
+			series.setCloseYCord(data);
+		}
 		return res;
 	}
 
