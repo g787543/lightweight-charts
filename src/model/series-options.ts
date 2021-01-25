@@ -4,6 +4,7 @@ import { LineStyle, LineType, LineWidth } from '../renderers/draw-line';
 
 import { AutoScaleMargins } from './autoscale-info-impl';
 import { PriceFormatterFn } from './price-formatter-fn';
+import { PriceLineOptions } from './price-line-options';
 import { PriceScaleMargins } from './price-scale';
 
 /** Structure describing a drawing style of the candlestick chart  */
@@ -48,6 +49,17 @@ export function fillUpDownCandlesticksColors(options: Partial<CandlestickStyleOp
 	}
 }
 
+export interface GradientColor {
+	color: string;
+	topColor?: string;
+	bottomColor?: string;
+}
+
+export interface CustomPriceLineOptions extends PriceLineOptions {
+	closeUpColor?: GradientColor;
+	closeDownColor?: GradientColor;
+}
+
 export interface BarStyleOptions {
 	upColor: string;
 	downColor: string;
@@ -56,6 +68,9 @@ export interface BarStyleOptions {
 }
 
 export interface LineStyleOptions {
+	/** yesterday close price */
+	yClose?: CustomPriceLineOptions;
+
 	color: string;
 	lineStyle: LineStyle;
 	lineWidth: LineWidth;
@@ -67,6 +82,9 @@ export interface LineStyleOptions {
 }
 
 export interface AreaStyleOptions {
+	/** yesterday close price */
+	yClose?: CustomPriceLineOptions;
+
 	topColor: string;
 	bottomColor: string;
 	lineColor: string;
