@@ -24,6 +24,8 @@ export class SeriesLinePaneView extends LinePaneViewBase<'Line', LineItem> {
 		this._makeValid();
 		const data: PaneRendererLineData = {
 			items: this._items,
+			yClose: lineStyleProps.yClose,
+			closeYCord: this._series.getCloseYCord(),
 			lineColor: lineStyleProps.color,
 			lineStyle: lineStyleProps.lineStyle,
 			lineType: lineStyleProps.lineType,

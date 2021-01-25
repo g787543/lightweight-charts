@@ -29,6 +29,8 @@ export class SeriesAreaPaneView extends LinePaneViewBase<'Area', LineItem> {
 		this._makeValid();
 		const data: PaneRendererAreaData = {
 			lineType: areaStyleProperties.lineType,
+			yClose: areaStyleProperties.yClose,
+			closeYCord: this._series.getCloseYCord(),
 			items: this._items,
 			lineColor: areaStyleProperties.lineColor,
 			lineStyle: areaStyleProperties.lineStyle,
