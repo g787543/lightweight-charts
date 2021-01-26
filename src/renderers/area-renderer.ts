@@ -64,10 +64,20 @@ export class PaneRendererArea extends ScaledRenderer {
 				this._data.yClose
 			);
 
-			if (this._data.visibleRange.to > this._data.visibleRange.from) {
+			if (this._data.visibleRange.to > this._data.visibleRange.from && !this._data.yClose) {
 				ctx.lineTo(this._data.items[this._data.visibleRange.to - 1].x, this._data.bottom);
 				ctx.lineTo(this._data.items[this._data.visibleRange.from].x, this._data.bottom);
 			}
+		}
+		if (!this._data.yClose) {
+			ctx.closePath();
+
+			const gradient = ctx.createLinearGradient(0, 0, 0, this._data.bottom);
+			gradient.addColorStop(0, this._data.topColor);
+			gradient.addColorStop(1, this._data.bottomColor);
+
+			ctx.fillStyle = gradient;
+			ctx.fill();
 		}
 	}
 }

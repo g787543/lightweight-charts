@@ -205,9 +205,8 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		this._seriesMap.set(res, series);
 		this._seriesMapReversed.set(series, res);
 		if (options.yClose?.price) {
-			const data = merge(clone(options.yClose)) as PriceLineOptions;
-			series.createPriceLine(data);
-			series.setCloseYCord(data);
+			series.createPriceLine(options.yClose as PriceLineOptions);
+			series.setCloseYCord(options.yClose as PriceLineOptions);
 		}
 		return res;
 	}
@@ -266,9 +265,8 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		this._seriesMap.set(res, series);
 		this._seriesMapReversed.set(series, res);
 		if (options.yClose?.price) {
-			const data = merge(clone(options.yClose)) as PriceLineOptions;
-			series.createPriceLine(data);
-			series.setCloseYCord(data);
+			series.createPriceLine(options.yClose as PriceLineOptions);
+			series.setCloseYCord(options.yClose as PriceLineOptions);
 		}
 		return res;
 	}

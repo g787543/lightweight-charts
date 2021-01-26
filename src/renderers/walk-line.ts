@@ -111,7 +111,7 @@ export function walkLine(
 	const dataArr = [];
 	let topItem = points[0];
 	let downItem = points[0];
-	ctx.moveTo(topItem.x, closeYCord as number);
+	ctx.moveTo(topItem.x, closeYCord || topItem.y);
 	for (let i = visibleRange.from; i < visibleRange.to; ++i) {
 		const prevItem = points[i - 1];
 		const currItem = points[i];
@@ -164,10 +164,13 @@ export function walkLine(
 				}
 				const color = judge === 'up' ? customStyle.closeUpColor : customStyle.closeDownColor;
 				setGradientColor(ctx, { x: 0, y: judge === 'up' ? topItem.y : downItem.y, x1: 0, y1: closeYCord }, color);
-				ctx.stroke();
 			}
 		} else {
 			ctx.lineTo(currItem.x, currItem.y);
+			if (currItem.y > topItem.y) {
+				topItem = currItem;
+			}
 		}
 	}
+	ctx.stroke();
 }

@@ -110,7 +110,7 @@ export class Series<T extends SeriesType = SeriesType> extends PriceDataSource i
 	private _markers: SeriesMarker<TimePoint>[] = [];
 	private _indexedMarkers: InternalSeriesMarker<TimePointIndex>[] = [];
 	private _markersPaneView!: SeriesMarkersPaneView;
-	private _yClose!: PriceLineOptions;
+	private _yClose: PriceLineOptions | null = null;
 
 	public constructor(model: ChartModel, options: SeriesOptionsInternal<T>, seriesType: T) {
 		super(model);
@@ -129,9 +129,11 @@ export class Series<T extends SeriesType = SeriesType> extends PriceDataSource i
 
 	public getCloseYCord(): number | null {
 		const firstValue = this.firstValue();
-		const { price } = this._yClose;
-		if (firstValue?.value && price) {
-			return this.priceScale().priceToCoordinate(price, firstValue.value);
+		if (this._yClose) {
+			const { price } = this._yClose;
+			if (firstValue?.value && price) {
+				return this.priceScale().priceToCoordinate(price, firstValue.value);
+			}
 		}
 		return null;
 	}
