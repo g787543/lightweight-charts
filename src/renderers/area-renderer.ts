@@ -38,6 +38,7 @@ export class PaneRendererArea extends ScaledRenderer {
 		}
 
 		ctx.lineCap = 'butt';
+		ctx.lineJoin = 'miter';
 		// walk lines with width=1 to have more accurate gradient's filling
 		ctx.beginPath();
 
@@ -49,8 +50,6 @@ export class PaneRendererArea extends ScaledRenderer {
 			ctx.lineTo(point.x + halfBarWidth, point.y);
 			ctx.lineTo(point.x + halfBarWidth, this._data.bottom);
 		} else {
-			ctx.moveTo(this._data.items[this._data.visibleRange.from].x, this._data.bottom);
-			ctx.lineTo(this._data.items[this._data.visibleRange.from].x, this._data.items[this._data.visibleRange.from].y);
 			walkLine(
 				ctx,
 				this._data.items,

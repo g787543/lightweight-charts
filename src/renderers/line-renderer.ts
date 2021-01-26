@@ -37,7 +37,7 @@ export class PaneRendererLine extends ScaledRenderer {
 
 		ctx.lineCap = 'butt';
 		ctx.lineJoin = 'miter';
-
+		// walk lines with width=1 to have more accurate gradient's filling
 		ctx.beginPath();
 
 		if (this._data.items.length === 1) {

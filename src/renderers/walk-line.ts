@@ -1,5 +1,6 @@
 /* eslint-disable complexity */
-import { CustomPriceLineOptions } from '../model/series-options';
+import { Coordinate } from '../model/coordinate';
+import { CustomPriceLineOptions, GradientColor } from '../model/series-options';
 import { SeriesItemsIndexesRange } from '../model/time-data';
 
 import { LinePoint, LineStyle, LineType, setLineStyle } from './draw-line';
@@ -9,6 +10,13 @@ interface LineOptions {
 	lineWidth: number;
 	lineStyle: LineStyle;
 	strokeStyle: string;
+}
+
+interface GradientPosition {
+	x: number;
+	y: number;
+	x1: number;
+	y1: number;
 }
 
 function setLineOption(ctx: CanvasRenderingContext2D, lineOptions: LineOptions, coverLineColor: boolean): void {
@@ -22,6 +30,67 @@ function setLineOption(ctx: CanvasRenderingContext2D, lineOptions: LineOptions, 
 	if (coverLineColor) {
 		ctx.strokeStyle = strokeStyle;
 	}
+}
+
+function setGradientColor(
+	ctx: CanvasRenderingContext2D,
+	position: GradientPosition,
+	gradient: GradientColor
+): void {
+	if (gradient.topColor && gradient.bottomColor) {
+		const g = ctx.createLinearGradient(position.x, position.y, position.x1, position.y1);
+		g.addColorStop(0, gradient.topColor);
+		g.addColorStop(1, gradient.bottomColor);
+		ctx.fillStyle = g;
+		ctx.fill();
+	}
+}
+
+function getPoint(
+	prevItem: LinePoint,
+	currItem: LinePoint,
+	closeYCord: number
+): LinePoint {
+	const { x: x1, y: y1 } = prevItem;
+	const { x: x2, y: y2 } = currItem;
+	return {
+		x: (closeYCord - y1) / (y2 - y1) * (x2 - x1) + x1 as Coordinate,
+		y: closeYCord as Coordinate,
+	};
+}
+
+// eslint-disable-next-line max-params
+function createNewArea(
+	ctx: CanvasRenderingContext2D,
+	lineOptions: LineOptions,
+	customStyle: CustomPriceLineOptions,
+	gradient: GradientColor,
+	closeYCord: number,
+	prevItem: LinePoint,
+	currItem: LinePoint
+): void {
+	const centerPoint = getPoint(prevItem, currItem, closeYCord);
+	ctx.beginPath();
+	setLineOption(ctx, lineOptions, !customStyle?.price);
+	ctx.strokeStyle = gradient.color;
+	ctx.moveTo(centerPoint.x, centerPoint.y);
+	ctx.lineTo(currItem.x, currItem.y);
+}
+
+function endArea(
+	ctx: CanvasRenderingContext2D,
+	gradient: GradientColor,
+	closeYCord: number,
+	prevItem: LinePoint,
+	currItem: LinePoint,
+	topItem: LinePoint
+): LinePoint {
+	const centerPoint = getPoint(prevItem, currItem, closeYCord);
+	ctx.strokeStyle = gradient.color;
+	ctx.lineTo(centerPoint.x, closeYCord);
+	setGradientColor(ctx, { x: 0, y: topItem.y, x1: 0, y1: closeYCord }, gradient);
+	ctx.stroke();
+	return centerPoint;
 }
 
 /**
@@ -39,8 +108,10 @@ export function walkLine(
 		return;
 	}
 	setLineOption(ctx, lineOptions, !customStyle?.price);
-	ctx.moveTo(0, closeYCord as number);
+	const dataArr = [];
 	let topItem = points[0];
+	let downItem = points[0];
+	ctx.moveTo(topItem.x, closeYCord as number);
 	for (let i = visibleRange.from; i < visibleRange.to; ++i) {
 		const prevItem = points[i - 1];
 		const currItem = points[i];
@@ -48,75 +119,51 @@ export function walkLine(
 			const { closeUpColor, closeDownColor } = customStyle;
 			if (prevItem.y <= closeYCord) {
 				if (currItem.y > closeYCord) {
-					const prevX = prevItem.x;
-					const currX = currItem.x;
-					const distance = (currX - prevX) / 2;
-					ctx.strokeStyle = closeUpColor.color;
-					ctx.lineTo(prevItem.x + distance, closeYCord);
-					if (closeUpColor.topColor && closeUpColor.bottomColor) {
-						ctx.closePath();
-						const gradient = ctx.createLinearGradient(0, topItem.y, 0, closeYCord);
-						gradient.addColorStop(0, closeUpColor.topColor);
-						gradient.addColorStop(1, closeUpColor.bottomColor);
-						ctx.fillStyle = gradient;
-						ctx.fill();
-					}
-					ctx.stroke();
-
-					ctx.beginPath();
-					setLineOption(ctx, lineOptions, !customStyle?.price);
-					ctx.strokeStyle = closeDownColor.color;
-					ctx.moveTo(prevItem.x + distance, closeYCord);
-					ctx.lineTo(currX, currItem.y);
-					topItem = currItem;
+					const endPoint = endArea(ctx, closeUpColor, closeYCord, prevItem, currItem, topItem);
+					dataArr.length = 0;
+					createNewArea(ctx, lineOptions, customStyle, closeDownColor, closeYCord, prevItem, currItem);
+					dataArr.push(endPoint, currItem);
 				} else if (currItem.y <= closeYCord) {
 					ctx.strokeStyle = closeUpColor.color;
 					ctx.lineTo(currItem.x, currItem.y);
 					if (topItem.y > currItem.y) {
 						topItem = currItem;
 					}
+					dataArr.push(currItem);
 				}
 			} else if (prevItem.y > closeYCord) {
 				if (currItem.y < closeYCord) {
-					const prevX = prevItem.x;
-					const currX = currItem.x;
-					const distance = (currX - prevX) / 2;
-					ctx.strokeStyle = closeDownColor.color;
-					ctx.lineTo(prevItem.x + distance, closeYCord);
-					if (closeDownColor.topColor && closeDownColor.bottomColor) {
-						ctx.closePath();
-						const gradient = ctx.createLinearGradient(0, topItem.y, 0, closeYCord);
-						gradient.addColorStop(0, closeDownColor.topColor);
-						gradient.addColorStop(1, closeDownColor.bottomColor);
-						ctx.fillStyle = gradient;
-						ctx.fill();
-					}
-					ctx.stroke();
-
-					ctx.beginPath();
-					setLineOption(ctx, lineOptions, !customStyle?.price);
-					ctx.strokeStyle = closeDownColor.color;
-					ctx.moveTo(prevItem.x + distance, closeYCord);
-					ctx.strokeStyle = closeUpColor.color;
-					ctx.lineTo(currX, currItem.y);
-					topItem = currItem;
+					const endPoint = endArea(ctx, closeDownColor, closeYCord, prevItem, currItem, downItem);
+					dataArr.length = 0;
+					createNewArea(ctx, lineOptions, customStyle, closeUpColor, closeYCord, prevItem, currItem);
+					dataArr.push(endPoint, currItem);
 				} else if (currItem.y >= closeYCord) {
 					ctx.strokeStyle = closeDownColor.color;
 					ctx.lineTo(currItem.x, currItem.y);
-					if (topItem.y < currItem.y) {
-						topItem = currItem;
+					if (downItem.y < currItem.y) {
+						downItem = currItem;
 					}
+					dataArr.push(currItem);
 				}
 			}
 			if (i === visibleRange.to - 1) {
-				ctx.lineTo(currItem.x, closeYCord);
-				ctx.closePath();
-				const gradient = ctx.createLinearGradient(0, topItem.y, 0, closeYCord);
-				const color = topItem.y > closeYCord ? closeDownColor : closeUpColor;
-				gradient.addColorStop(0, color.topColor as string);
-				gradient.addColorStop(1, color.bottomColor as string);
-				ctx.fillStyle = gradient;
+				const judge = currItem.y <= closeYCord ? 'up' : 'down';
+				ctx.fillStyle = 'rgba(0,0,0,0)';
 				ctx.fill();
+				ctx.stroke();
+
+				ctx.beginPath();
+				ctx.moveTo(dataArr[0].x, closeYCord);
+				ctx.strokeStyle = 'rgba(0,0,0,0)';
+				for (let j = 0; j < dataArr.length; j ++) {
+					const item = dataArr[j];
+					ctx.lineTo(item.x, item.y);
+					if (j === dataArr.length - 1) {
+						ctx.lineTo(item.x, closeYCord);
+					}
+				}
+				const color = judge === 'up' ? customStyle.closeUpColor : customStyle.closeDownColor;
+				setGradientColor(ctx, { x: 0, y: judge === 'up' ? topItem.y : downItem.y, x1: 0, y1: closeYCord }, color);
 				ctx.stroke();
 			}
 		} else {
