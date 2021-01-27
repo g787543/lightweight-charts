@@ -5,6 +5,7 @@ import { ChartModel, ChartOptionsInternal } from '../../model/chart-model';
 import { Coordinate } from '../../model/coordinate';
 import { Crosshair } from '../../model/crosshair';
 import { Series } from '../../model/series';
+import { AreaSeriesOptions, LineSeriesOptions } from '../../model/series-options';
 import { SeriesItemsIndexesRange, TimePointIndex } from '../../model/time-data';
 import { CompositeRenderer } from '../../renderers/composite-renderer';
 import { IPaneRenderer } from '../../renderers/ipane-renderer';
@@ -71,7 +72,7 @@ export class CrosshairMarksPaneView implements IUpdatablePaneView {
 		const serieses = this._chartModel.serieses();
 		const timePointIndex = this._crosshair.appliedIndex();
 		const timeScale = this._chartModel.timeScale();
-
+		timeScale.indexToCoordinate(timePointIndex);
 		serieses.forEach((s: Series, index: number) => {
 			const data = this._markersData[index];
 			const seriesData = s.markerDataAtIndex(timePointIndex);
@@ -80,7 +81,19 @@ export class CrosshairMarksPaneView implements IUpdatablePaneView {
 				data.visibleRange = null;
 				return;
 			}
-
+			const seriesType = s.seriesType();
+			if (seriesType === 'Area' || seriesType === 'Line') {
+				const seriesOptions = s.options() as AreaSeriesOptions | LineSeriesOptions;
+				if (seriesOptions.yClose) {
+					const price = s.dataAt(timePointIndex) as number;
+					const { price: yesterDayPrice, closeDownColor, closeUpColor } = seriesOptions.yClose;
+					if (price >= yesterDayPrice && closeUpColor?.color) {
+						seriesData.backgroundColor = closeUpColor.color;
+					} else if (price < yesterDayPrice && closeDownColor?.color) {
+						seriesData.backgroundColor = closeDownColor.color;
+					}
+				}
+			}
 			const firstValue = ensureNotNull(s.firstValue());
 			data.lineColor = seriesData.backgroundColor;
 			data.backColor = seriesData.borderColor;
