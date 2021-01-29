@@ -112,6 +112,7 @@ export function walkLine(
 	let topItem = points[0];
 	let downItem = points[0];
 	ctx.moveTo(topItem.x, closeYCord || topItem.y);
+	let judge;
 	for (let i = visibleRange.from; i < visibleRange.to; ++i) {
 		const prevItem = points[i - 1];
 		const currItem = points[i];
@@ -130,24 +131,25 @@ export function walkLine(
 						topItem = currItem;
 					}
 					dataArr.push(currItem);
+					judge = 'up';
 				}
 			} else if (prevItem.y > closeYCord) {
-				if (currItem.y < closeYCord) {
+				if (currItem.y <= closeYCord) {
 					const endPoint = endArea(ctx, closeDownColor, closeYCord, prevItem, currItem, downItem);
 					dataArr.length = 0;
 					createNewArea(ctx, lineOptions, customStyle, closeUpColor, closeYCord, prevItem, currItem);
 					dataArr.push(endPoint, currItem);
-				} else if (currItem.y >= closeYCord) {
+				} else if (currItem.y > closeYCord) {
 					ctx.strokeStyle = closeDownColor.color;
 					ctx.lineTo(currItem.x, currItem.y);
 					if (downItem.y < currItem.y) {
 						downItem = currItem;
 					}
 					dataArr.push(currItem);
+					judge = 'down';
 				}
 			}
 			if (i === visibleRange.to - 1) {
-				const judge = currItem.y <= closeYCord ? 'up' : 'down';
 				ctx.fillStyle = 'rgba(0,0,0,0)';
 				ctx.fill();
 				ctx.stroke();
