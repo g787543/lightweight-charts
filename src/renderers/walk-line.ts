@@ -108,9 +108,9 @@ export function walkLine(
 		return;
 	}
 	setLineOption(ctx, lineOptions, !customStyle?.price);
-	const dataArr = [];
 	let topItem = points[0];
 	let downItem = points[0];
+	const dataArr = [topItem];
 	ctx.moveTo(topItem.x, closeYCord || topItem.y);
 	let judge;
 	for (let i = visibleRange.from; i < visibleRange.to; ++i) {
