@@ -204,9 +204,13 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		const res = new SeriesApi<'Area'>(series, this, this);
 		this._seriesMap.set(res, series);
 		this._seriesMapReversed.set(series, res);
-		if (options.yClose?.price) {
-			series.createPriceLine(options.yClose as PriceLineOptions);
-			series.setCloseYCord(options.yClose as PriceLineOptions);
+		if (options.yClose && options) {
+			const { price, visible } = options.yClose;
+			// eslint-disable-next-line @typescript-eslint/tslint/config
+			if (price && (typeof visible === 'undefined' || (typeof visible === 'boolean' && visible))) {
+				series.createPriceLine(options.yClose as PriceLineOptions);
+				series.setCloseYCord(options.yClose as PriceLineOptions);
+			}
 		}
 		return res;
 	}
@@ -264,9 +268,13 @@ export class ChartApi implements IChartApi, DataUpdatesConsumer<SeriesType> {
 		const res = new SeriesApi<'Line'>(series, this, this);
 		this._seriesMap.set(res, series);
 		this._seriesMapReversed.set(series, res);
-		if (options.yClose?.price) {
-			series.createPriceLine(options.yClose as PriceLineOptions);
-			series.setCloseYCord(options.yClose as PriceLineOptions);
+		if (options.yClose && options) {
+			const { price, visible } = options.yClose;
+			// eslint-disable-next-line @typescript-eslint/tslint/config
+			if (price && (typeof visible === 'undefined' || (typeof visible === 'boolean' && visible))) {
+				series.createPriceLine(options.yClose as PriceLineOptions);
+				series.setCloseYCord(options.yClose as PriceLineOptions);
+			}
 		}
 		return res;
 	}

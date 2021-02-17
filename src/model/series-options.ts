@@ -56,6 +56,7 @@ export interface GradientColor {
 }
 
 export interface CustomPriceLineOptions extends PriceLineOptions {
+	visible: boolean;
 	closeUpColor?: GradientColor;
 	closeDownColor?: GradientColor;
 }
